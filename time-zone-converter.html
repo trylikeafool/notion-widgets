@@ -1,8 +1,113 @@
-<div style="display: flex; justify-content: center; width: 100%;">
-  <span class="wtb-ew-v1" style="width: 100%; max-width: 600px; display: inline-block;">
-    <script src="https://www.worldtimebuddy.com/clock_widget.js?h=200&bc=8BA1BB&cn=&wt=c2"></script>
-    <i><a href="https://www.worldtimebuddy.com/">Time Converter</a></i>
-    <noscript><a href="https://www.worldtimebuddy.com/">Time Converter</a></noscript>
-    <script>window[wtb_event_widgets.pop()].init()</script>
-  </span>
-</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Zone Converter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .converter {
+            text-align: center;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        select, button {
+            padding: 10px;
+            font-size: 16px;
+            margin: 5px;
+        }
+        .output {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="converter">
+        <h2>Time Zone Converter</h2>
+        <label for="sourceTimeZone">Select Source Time Zone:</label>
+        <select id="sourceTimeZone"></select>
+        
+        <label for="targetTimeZone">Select Target Time Zone:</label>
+        <select id="targetTimeZone"></select>
+        
+        <button onclick="convertTime()">Convert Time</button>
+        
+        <div class="output" id="output">Converted time will appear here.</div>
+    </div>
+
+    <script>
+        // Time zones list (using common time zones for simplicity)
+        const timeZones = [
+            { label: "GMT", value: "Etc/GMT" },
+            { label: "UTC", value: "Etc/UTC" },
+            { label: "New York (EST)", value: "America/New_York" },
+            { label: "Los Angeles (PST)", value: "America/Los_Angeles" },
+            { label: "London (BST)", value: "Europe/London" },
+            { label: "Paris (CET)", value: "Europe/Paris" },
+            { label: "Tokyo (JST)", value: "Asia/Tokyo" },
+            { label: "Sydney (AEST)", value: "Australia/Sydney" }
+        ];
+
+        // Populate dropdowns with time zones
+        function populateTimeZones() {
+            const sourceSelect = document.getElementById("sourceTimeZone");
+            const targetSelect = document.getElementById("targetTimeZone");
+
+            timeZones.forEach(zone => {
+                const option1 = document.createElement("option");
+                option1.value = zone.value;
+                option1.textContent = zone.label;
+                sourceSelect.appendChild(option1);
+
+                const option2 = document.createElement("option");
+                option2.value = zone.value;
+                option2.textContent = zone.label;
+                targetSelect.appendChild(option2);
+            });
+        }
+
+        // Convert time based on selected time zones
+        function convertTime() {
+            const sourceZone = document.getElementById("sourceTimeZone").value;
+            const targetZone = document.getElementById("targetTimeZone").value;
+
+            const now = new Date();
+
+            // Get the time in the source time zone
+            const sourceTime = new Intl.DateTimeFormat("en-US", {
+                timeZone: sourceZone,
+                hour: 'numeric',
+                minute: 'numeric',
+                second: 'numeric',
+                hour12: false
+            }).format(now);
+
+            // Get the time in the target time zone
+            const targetTime = new Intl.DateTimeFormat("en-US", {
+                timeZone: targetZone,
+                hour: 'numeric',
+                minute: 'numeric',
+                second: 'numeric',
+                hour12: false
+            }).format(now);
+
+            document.getElementById("output").textContent = 
+                `Source Time: ${sourceTime} | Target Time: ${targetTime}`;
+        }
+
+        // Initialize the time zones on page load
+        populateTimeZones();
+    </script>
+</body>
+</html>
