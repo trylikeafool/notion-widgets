@@ -36,7 +36,9 @@
     <div class="converter">
         <h2>Time Zone Converter</h2>
         <label for="sourceTimeZone">Select Source Time Zone:</label>
-        <select id="sourceTimeZone"></select>
+        <select id="sourceTimeZone">
+            <option value="Etc/UTC">UTC</option>
+        </select>
         
         <label for="targetTimeZone">Select Target Time Zone:</label>
         <select id="targetTimeZone"></select>
@@ -61,20 +63,18 @@
 
         // Populate dropdowns with time zones
         function populateTimeZones() {
-            const sourceSelect = document.getElementById("sourceTimeZone");
             const targetSelect = document.getElementById("targetTimeZone");
 
             timeZones.forEach(zone => {
-                const option1 = document.createElement("option");
-                option1.value = zone.value;
-                option1.textContent = zone.label;
-                sourceSelect.appendChild(option1);
-
-                const option2 = document.createElement("option");
-                option2.value = zone.value;
-                option2.textContent = zone.label;
-                targetSelect.appendChild(option2);
+                const option = document.createElement("option");
+                option.value = zone.value;
+                option.textContent = zone.label;
+                targetSelect.appendChild(option);
             });
+
+            // Automatically set the target time zone to the user's local time zone
+            const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            targetSelect.value = userTimeZone;
         }
 
         // Convert time based on selected time zones
@@ -84,7 +84,7 @@
 
             const now = new Date();
 
-            // Get the time in the source time zone
+            // Get the time in the source time zone (UTC by default)
             const sourceTime = new Intl.DateTimeFormat("en-US", {
                 timeZone: sourceZone,
                 hour: 'numeric',
@@ -103,7 +103,7 @@
             }).format(now);
 
             document.getElementById("output").textContent = 
-                `Source Time: ${sourceTime} | Target Time: ${targetTime}`;
+                `Source Time (UTC): ${sourceTime} | Target Time: ${targetTime}`;
         }
 
         // Initialize the time zones on page load
