@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Time Zone Converter</title>
+    <title>Event Calendar</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -14,100 +14,98 @@
             margin: 0;
             background-color: #f0f0f0;
         }
-        .converter {
-            text-align: center;
+        .calendar {
+            width: 100%;
+            max-width: 600px;
             background-color: #ffffff;
-            padding: 20px;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            text-align: center;
         }
-        select, button {
+        .calendar h2 {
+            margin-top: 0;
+        }
+        .days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-top: 10px;
+        }
+        .day {
             padding: 10px;
-            font-size: 16px;
-            margin: 5px;
+            border-radius: 4px;
+            background-color: #e0e0e0;
+            font-weight: bold;
         }
-        .output {
-            margin-top: 20px;
-            font-size: 18px;
+        .event {
+            background-color: #DD5F17;
+            color: #ffffff;
+            padding: 5px;
+            border-radius: 4px;
+            margin-top: 5px;
         }
     </style>
 </head>
 <body>
-    <div class="converter">
-        <h2>Time Zone Converter</h2>
-        <label for="sourceTimeZone">Select Source Time Zone:</label>
-        <select id="sourceTimeZone">
-            <option value="Etc/UTC">UTC</option>
-        </select>
-        
-        <label for="targetTimeZone">Select Target Time Zone:</label>
-        <select id="targetTimeZone"></select>
-        
-        <button onclick="convertTime()">Convert Time</button>
-        
-        <div class="output" id="output">Converted time will appear here.</div>
+    <div class="calendar">
+        <h2>Event Calendar (in Your Local Time)</h2>
+        <div id="month-year"></div>
+        <div class="days" id="calendar-days"></div>
     </div>
 
     <script>
-        // Time zones list (using common time zones for simplicity)
-        const timeZones = [
-            { label: "GMT", value: "Etc/GMT" },
-            { label: "UTC", value: "Etc/UTC" },
-            { label: "New York (EST)", value: "America/New_York" },
-            { label: "Los Angeles (PST)", value: "America/Los_Angeles" },
-            { label: "London (BST)", value: "Europe/London" },
-            { label: "Paris (CET)", value: "Europe/Paris" },
-            { label: "Tokyo (JST)", value: "Asia/Tokyo" },
-            { label: "Sydney (AEST)", value: "Australia/Sydney" }
+        // Event data in UTC (adjust dates/times as needed)
+        const events = [
+            { date: '2024-11-05T18:00:00Z', title: 'Release: History Video' },
+            { date: '2024-11-12T18:00:00Z', title: 'Livestream Event' },
+            { date: '2024-11-19T18:00:00Z', title: 'Special Guest Q&A' }
         ];
 
-        // Populate dropdowns with time zones
-        function populateTimeZones() {
-            const targetSelect = document.getElementById("targetTimeZone");
-
-            timeZones.forEach(zone => {
-                const option = document.createElement("option");
-                option.value = zone.value;
-                option.textContent = zone.label;
-                targetSelect.appendChild(option);
-            });
-
-            // Automatically set the target time zone to the user's local time zone
-            const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-            targetSelect.value = userTimeZone;
+        // Helper function to get days in a month
+        function getDaysInMonth(year, month) {
+            return new Date(year, month + 1, 0).getDate();
         }
 
-        // Convert time based on selected time zones
-        function convertTime() {
-            const sourceZone = document.getElementById("sourceTimeZone").value;
-            const targetZone = document.getElementById("targetTimeZone").value;
+        // Render the calendar
+        function renderCalendar() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = today.getMonth();
+            const daysContainer = document.getElementById('calendar-days');
+            const monthYearDisplay = document.getElementById('month-year');
 
-            const now = new Date();
+            // Clear previous calendar days
+            daysContainer.innerHTML = '';
+            monthYearDisplay.textContent = today.toLocaleString('default', { month: 'long', year: 'numeric' });
 
-            // Get the time in the source time zone (UTC by default)
-            const sourceTime = new Intl.DateTimeFormat("en-US", {
-                timeZone: sourceZone,
-                hour: 'numeric',
-                minute: 'numeric',
-                second: 'numeric',
-                hour12: false
-            }).format(now);
+            const daysInMonth = getDaysInMonth(year, month);
 
-            // Get the time in the target time zone
-            const targetTime = new Intl.DateTimeFormat("en-US", {
-                timeZone: targetZone,
-                hour: 'numeric',
-                minute: 'numeric',
-                second: 'numeric',
-                hour12: false
-            }).format(now);
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayElement = document.createElement('div');
+                dayElement.classList.add('day');
+                dayElement.textContent = day;
 
-            document.getElementById("output").textContent = 
-                `Source Time (UTC): ${sourceTime} | Target Time: ${targetTime}`;
+                // Check if the day has an event
+                const event = events.find(event => {
+                    const eventDate = new Date(event.date);
+                    return eventDate.getUTCFullYear() === year && eventDate.getUTCMonth() === month && eventDate.getUTCDate() === day;
+                });
+
+                if (event) {
+                    const eventTime = new Date(event.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone });
+                    const eventElement = document.createElement('div');
+                    eventElement.classList.add('event');
+                    eventElement.textContent = `${event.title} - ${eventTime}`;
+                    dayElement.appendChild(eventElement);
+                }
+
+                daysContainer.appendChild(dayElement);
+            }
         }
 
-        // Initialize the time zones on page load
-        populateTimeZones();
+        // Initialize the calendar
+        renderCalendar();
     </script>
 </body>
 </html>
