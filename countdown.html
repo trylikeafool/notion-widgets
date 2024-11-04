@@ -5,10 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Focus Countdown Widget</title>
     <style>
+        /* Full-page white background */
         body {
             font-family: Arial, sans-serif;
             margin: 0;
-            background-color: #f4f4f9;
+            background-color: #ffffff;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -46,14 +47,13 @@
         .task-list {
             display: none;
             position: absolute;
-            top: 100%;
-            left: 0;
-            width: 100%;
+            top: 10px;
+            right: 10px;
+            width: 250px;
             padding: 10px;
             background-color: #f8f8f8;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            text-align: left;
             z-index: 1;
         }
         .task-item {
@@ -65,20 +65,19 @@
             color: #888;
         }
         .complete-button {
-            padding: 10px 20px;
-            font-size: 16px;
-            margin-top: 20px;
+            padding: 12px;
+            font-size: 18px;
             color: #ffffff;
             background-color: #DD5F17;
             border: none;
-            border-radius: 8px;
+            border-radius: 50%;
             cursor: pointer;
             transition: background-color 0.3s ease;
         }
         .complete-button:hover {
             background-color: #c24a14;
         }
-        /* Gradient Border Animation */
+        /* Animated Gradient Border */
         .widget-container[data-color="green"] {
             border: 4px solid #34a853;
         }
@@ -88,24 +87,56 @@
         .widget-container[data-color="red"] {
             border: 4px solid #ea4335;
         }
+        /* Input form styling */
+        .task-form {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .task-form input[type="text"], .task-form input[type="time"] {
+            padding: 8px;
+            font-size: 16px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            outline: none;
+        }
+        .task-form button {
+            padding: 8px;
+            font-size: 16px;
+            color: #ffffff;
+            background-color: #34a853;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .task-form button:hover {
+            background-color: #2d8a3c;
+        }
     </style>
 </head>
 <body>
     <div class="widget-container" id="widgetContainer" data-color="green">
-        <div class="icon-container" id="viewAllTasksIcon">📋</div>
+        <div class="icon-container" id="viewAllTasksIcon">☰</div>
         <div class="current-task" id="currentTask"></div>
         <div class="countdown" id="countdown"></div>
-        <button class="complete-button" onclick="markTaskComplete()">Mark as Complete</button>
+        <button class="complete-button" onclick="markTaskComplete()">✔️</button>
+        
+        <!-- Task List Pop-up -->
         <div class="task-list" id="taskList"></div>
+        
+        <!-- Add Task Form -->
+        <div class="task-form">
+            <input type="text" id="taskName" placeholder="Task Name">
+            <input type="time" id="taskTime" placeholder="Target Time">
+            <button onclick="addTask()">Add Task</button>
+        </div>
     </div>
 
     <script>
-        // Sample tasks with target completion times
-        const tasks = [
-            { name: "Task 1: Reply to Emails", deadline: new Date(Date.now() + 1800000) },
-            { name: "Task 2: Finish Report", deadline: new Date(Date.now() + 2700000) },
-            { name: "Task 3: Prepare Presentation", deadline: new Date(Date.now() + 4500000) }
-        ];
+        // Array to store tasks
+        const tasks = [];
         let currentTaskIndex = 0;
 
         const currentTaskElem = document.getElementById("currentTask");
@@ -114,7 +145,7 @@
         const widgetContainer = document.getElementById("widgetContainer");
         const viewAllTasksIcon = document.getElementById("viewAllTasksIcon");
 
-        // Initialize the task list display
+        // Load the task list display
         function loadTaskList() {
             taskListElem.innerHTML = "";
             tasks.forEach((task, index) => {
@@ -128,47 +159,62 @@
             });
         }
 
-        // Function to mark a task as complete and move to the next one
-        function markTaskComplete() {
-            if (currentTaskIndex < tasks.length - 1) {
-                currentTaskIndex++;
-                loadTaskList(); // Refresh the task list
+        // Convert a target time to a Date object today
+        function getTargetTime(targetTime) {
+            const now = new Date();
+            const [hours, minutes] = targetTime.split(":");
+            const target = new Date(now);
+            target.setHours(hours, minutes, 0, 0);
+            if (target < now) target.setDate(target.getDate() + 1); // Move to next day if time has passed
+            return target;
+        }
+
+        // Add new task
+        function addTask() {
+            const taskName = document.getElementById("taskName").value;
+            const taskTime = document.getElementById("taskTime").value;
+            if (taskName && taskTime) {
+                tasks.push({ name: taskName, deadline: getTargetTime(taskTime) });
+                loadTaskList();
+                if (tasks.length === 1) updateCountdown(); // Start countdown if first task
             }
         }
 
-        // Update countdown, task display, and border color
+        // Mark the current task as complete
+        function markTaskComplete() {
+            if (currentTaskIndex < tasks.length - 1) {
+                currentTaskIndex++;
+                loadTaskList(); // Refresh task list
+            }
+        }
+
+        // Update countdown and task display
         function updateCountdown() {
             const currentTask = tasks[currentTaskIndex];
+            if (!currentTask) return;
+
             const now = new Date();
             const timeLeft = Math.max(0, currentTask.deadline - now);
 
-            // Update display for current task
+            // Display current task and countdown
             currentTaskElem.textContent = currentTask.name;
-            countdownElem.textContent = new Date(timeLeft).toISOString().substr(14, 5);
+            countdownElem.textContent = new Date(timeLeft).toISOString().substr(11, 8);
 
-            // Change the border color based on time remaining
-            if (timeLeft > 1800000) { // More than 30 minutes
-                widgetContainer.setAttribute("data-color", "green");
-            } else if (timeLeft > 900000) { // Between 15 and 30 minutes
-                widgetContainer.setAttribute("data-color", "yellow");
-            } else { // 15 minutes or less
-                widgetContainer.setAttribute("data-color", "red");
-            }
+            // Change border color based on time remaining
+            if (timeLeft > 1800000) { widgetContainer.setAttribute("data-color", "green"); }
+            else if (timeLeft > 900000) { widgetContainer.setAttribute("data-color", "yellow"); }
+            else { widgetContainer.setAttribute("data-color", "red"); }
 
-            // Move to the next task when the countdown hits zero
+            // Move to the next task if time is up
             if (timeLeft === 0 && currentTaskIndex < tasks.length - 1) {
                 currentTaskIndex++;
                 loadTaskList();
             }
         }
 
-        // Toggle task list on icon hover
-        viewAllTasksIcon.addEventListener("mouseover", () => {
-            taskListElem.style.display = "block";
-        });
-        viewAllTasksIcon.addEventListener("mouseleave", () => {
-            taskListElem.style.display = "none";
-        });
+        // Toggle task list visibility on hover
+        viewAllTasksIcon.addEventListener("mouseover", () => { taskListElem.style.display = "block"; });
+        viewAllTasksIcon.addEventListener("mouseleave", () => { taskListElem.style.display = "none"; });
 
         // Start countdown updates
         loadTaskList();
