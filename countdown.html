@@ -24,7 +24,15 @@
             background-color: #ffffff;
             text-align: center;
             position: relative;
+            border: 8px solid;
             transition: border 0.3s ease;
+            animation: borderAnimation 5s infinite alternate;
+        }
+        /* Animated Gradient Border */
+        @keyframes borderAnimation {
+            0% { border-color: #34a853; }
+            50% { border-color: #fbbc05; }
+            100% { border-color: #ea4335; }
         }
         .current-task {
             font-size: 24px;
@@ -40,7 +48,7 @@
             position: absolute;
             top: 10px;
             right: 10px;
-            font-size: 24px;
+            font-size: 28px;
             cursor: pointer;
             color: #888;
         }
@@ -49,7 +57,7 @@
             position: absolute;
             top: 10px;
             right: 10px;
-            width: 250px;
+            width: 300px;
             padding: 10px;
             background-color: #f8f8f8;
             border-radius: 8px;
@@ -65,36 +73,27 @@
             color: #888;
         }
         .complete-button {
-            padding: 12px;
-            font-size: 18px;
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-top: 20px;
             color: #ffffff;
             background-color: #DD5F17;
             border: none;
-            border-radius: 50%;
+            border-radius: 8px;
             cursor: pointer;
             transition: background-color 0.3s ease;
         }
         .complete-button:hover {
             background-color: #c24a14;
         }
-        /* Animated Gradient Border */
-        .widget-container[data-color="green"] {
-            border: 4px solid #34a853;
-        }
-        .widget-container[data-color="yellow"] {
-            border: 4px solid #fbbc05;
-        }
-        .widget-container[data-color="red"] {
-            border: 4px solid #ea4335;
-        }
-        /* Input form styling */
+        /* Input form styling with calendar and time selection */
         .task-form {
-            margin-top: 20px;
+            margin-top: 10px;
             display: flex;
             flex-direction: column;
             gap: 10px;
         }
-        .task-form input[type="text"], .task-form input[type="time"] {
+        .task-form input[type="text"], .task-form input[type="time"], .task-form input[type="date"] {
             padding: 8px;
             font-size: 16px;
             border-radius: 4px;
@@ -117,20 +116,21 @@
     </style>
 </head>
 <body>
-    <div class="widget-container" id="widgetContainer" data-color="green">
+    <div class="widget-container" id="widgetContainer">
         <div class="icon-container" id="viewAllTasksIcon">☰</div>
         <div class="current-task" id="currentTask"></div>
         <div class="countdown" id="countdown"></div>
-        <button class="complete-button" onclick="markTaskComplete()">✔️</button>
+        <button class="complete-button" onclick="markTaskComplete()">Mark as Complete</button>
         
-        <!-- Task List Pop-up -->
-        <div class="task-list" id="taskList"></div>
-        
-        <!-- Add Task Form -->
-        <div class="task-form">
-            <input type="text" id="taskName" placeholder="Task Name">
-            <input type="time" id="taskTime" placeholder="Target Time">
-            <button onclick="addTask()">Add Task</button>
+        <!-- Task List Pop-up with Calendar and Time Input -->
+        <div class="task-list" id="taskList">
+            <div class="task-form">
+                <input type="text" id="taskName" placeholder="Task Name">
+                <input type="date" id="taskDate" placeholder="Target Date">
+                <input type="time" id="taskTime" placeholder="Target Time">
+                <button onclick="addTask()">Add Task</button>
+            </div>
+            <div id="taskItems"></div>
         </div>
     </div>
 
@@ -141,13 +141,39 @@
 
         const currentTaskElem = document.getElementById("currentTask");
         const countdownElem = document.getElementById("countdown");
-        const taskListElem = document.getElementById("taskList");
+        const taskItemsElem = document.getElementById("taskItems");
         const widgetContainer = document.getElementById("widgetContainer");
         const viewAllTasksIcon = document.getElementById("viewAllTasksIcon");
+        const taskListElem = document.getElementById("taskList");
+
+        // Function to open/close the task list
+        viewAllTasksIcon.addEventListener("click", () => {
+            taskListElem.style.display = taskListElem.style.display === "block" ? "none" : "block";
+        });
+
+        // Convert a target date and time to a Date object
+        function getTargetDateTime(date, time) {
+            const [hours, minutes] = time.split(":");
+            const target = new Date(date);
+            target.setHours(hours, minutes, 0, 0);
+            return target;
+        }
+
+        // Add new task
+        function addTask() {
+            const taskName = document.getElementById("taskName").value;
+            const taskDate = document.getElementById("taskDate").value;
+            const taskTime = document.getElementById("taskTime").value;
+            if (taskName && taskDate && taskTime) {
+                tasks.push({ name: taskName, deadline: getTargetDateTime(taskDate, taskTime) });
+                loadTaskList();
+                if (tasks.length === 1) updateCountdown(); // Start countdown if first task
+            }
+        }
 
         // Load the task list display
         function loadTaskList() {
-            taskListElem.innerHTML = "";
+            taskItemsElem.innerHTML = "";
             tasks.forEach((task, index) => {
                 const taskItem = document.createElement("div");
                 taskItem.className = "task-item";
@@ -155,29 +181,8 @@
                     taskItem.classList.add("completed");
                 }
                 taskItem.textContent = task.name;
-                taskListElem.appendChild(taskItem);
+                taskItemsElem.appendChild(taskItem);
             });
-        }
-
-        // Convert a target time to a Date object today
-        function getTargetTime(targetTime) {
-            const now = new Date();
-            const [hours, minutes] = targetTime.split(":");
-            const target = new Date(now);
-            target.setHours(hours, minutes, 0, 0);
-            if (target < now) target.setDate(target.getDate() + 1); // Move to next day if time has passed
-            return target;
-        }
-
-        // Add new task
-        function addTask() {
-            const taskName = document.getElementById("taskName").value;
-            const taskTime = document.getElementById("taskTime").value;
-            if (taskName && taskTime) {
-                tasks.push({ name: taskName, deadline: getTargetTime(taskTime) });
-                loadTaskList();
-                if (tasks.length === 1) updateCountdown(); // Start countdown if first task
-            }
         }
 
         // Mark the current task as complete
@@ -200,21 +205,12 @@
             currentTaskElem.textContent = currentTask.name;
             countdownElem.textContent = new Date(timeLeft).toISOString().substr(11, 8);
 
-            // Change border color based on time remaining
-            if (timeLeft > 1800000) { widgetContainer.setAttribute("data-color", "green"); }
-            else if (timeLeft > 900000) { widgetContainer.setAttribute("data-color", "yellow"); }
-            else { widgetContainer.setAttribute("data-color", "red"); }
-
             // Move to the next task if time is up
             if (timeLeft === 0 && currentTaskIndex < tasks.length - 1) {
                 currentTaskIndex++;
                 loadTaskList();
             }
         }
-
-        // Toggle task list visibility on hover
-        viewAllTasksIcon.addEventListener("mouseover", () => { taskListElem.style.display = "block"; });
-        viewAllTasksIcon.addEventListener("mouseleave", () => { taskListElem.style.display = "none"; });
 
         // Start countdown updates
         loadTaskList();
