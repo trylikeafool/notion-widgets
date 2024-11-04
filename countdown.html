@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Focus Countdown Widget</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f4f4f9;
+        }
+        .widget-container {
+            width: 300px;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: #ffffff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            position: relative;
+        }
+        .current-task {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .countdown {
+            font-size: 24px;
+            color: #DD5F17;
+            margin: 10px 0;
+        }
+        .icon-container {
+            margin-top: 10px;
+            cursor: pointer;
+            color: #888;
+            font-size: 14px;
+        }
+        .icon-container:hover .task-list {
+            display: block;
+        }
+        .task-list {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            padding: 10px;
+            background-color: #f8f8f8;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            text-align: left;
+            z-index: 1;
+        }
+        .task-item {
+            font-size: 14px;
+            margin: 5px 0;
+        }
+        .task-item.completed {
+            text-decoration: line-through;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="widget-container">
+        <div class="current-task" id="currentTask"></div>
+        <div class="countdown" id="countdown"></div>
+        <div class="icon-container">
+            📝 View All Tasks
+            <div class="task-list" id="taskList"></div>
+        </div>
+    </div>
+
+    <script>
+        // Sample tasks with target completion times
+        const tasks = [
+            { name: "Task 1: Reply to Emails", deadline: new Date(Date.now() + 60000) },
+            { name: "Task 2: Finish Report", deadline: new Date(Date.now() + 180000) },
+            { name: "Task 3: Prepare Presentation", deadline: new Date(Date.now() + 300000) }
+        ];
+        let currentTaskIndex = 0;
+
+        const currentTaskElem = document.getElementById("currentTask");
+        const countdownElem = document.getElementById("countdown");
+        const taskListElem = document.getElementById("taskList");
+
+        // Initialize the task list display
+        function loadTaskList() {
+            taskListElem.innerHTML = "";
+            tasks.forEach((task, index) => {
+                const taskItem = document.createElement("div");
+                taskItem.className = "task-item";
+                if (index < currentTaskIndex) {
+                    taskItem.classList.add("completed");
+                }
+                taskItem.textContent = task.name;
+                taskListElem.appendChild(taskItem);
+            });
+        }
+
+        // Update countdown and task display
+        function updateCountdown() {
+            const currentTask = tasks[currentTaskIndex];
+            const now = new Date();
+            const timeLeft = Math.max(0, currentTask.deadline - now);
+
+            // Update display for current task
+            currentTaskElem.textContent = currentTask.name;
+            countdownElem.textContent = new Date(timeLeft).toISOString().substr(14, 5);
+
+            // Change to the next task when the countdown hits zero
+            if (timeLeft === 0 && currentTaskIndex < tasks.length - 1) {
+                currentTaskIndex++;
+                loadTaskList(); // Refresh the task list
+            }
+        }
+
+        // Start countdown updates
+        loadTaskList();
+        setInterval(updateCountdown, 1000);
+    </script>
+</body>
+</html>
